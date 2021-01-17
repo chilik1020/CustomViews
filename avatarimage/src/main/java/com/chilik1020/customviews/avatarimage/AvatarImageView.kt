@@ -2,32 +2,97 @@ package com.chilik1020.customviews.avatarimage
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Log
+import androidx.annotation.ColorInt
+import androidx.annotation.Px
 import androidx.appcompat.widget.AppCompatImageView
+import com.chilik1020.customviews.R
+import com.chilik1020.customviews.extensions.dpToPx
+import com.chilik1020.customviews.utils.LOG_TAG
 
 class AvatarImageView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : AppCompatImageView(context, attrs, defStyleAttr) {
+
+    @Px
+    var borderWidth: Float = context.dpToPx(DEFAULT_BORDER_WIDTH)
+
+    @ColorInt
+    private var borderColor: Int = Color.WHITE
+    private var initials: String = "??"
+
+    init {
+        if (attrs != null) {
+            val ta = context.obtainStyledAttributes(attrs, R.styleable.AvatarImageView)
+            borderWidth = ta.getDimension(
+                R.styleable.AvatarImageView_aiv_borderWidth,
+                context.dpToPx(DEFAULT_BORDER_WIDTH)
+            )
+
+            borderColor =
+                ta.getColor(R.styleable.AvatarImageView_aiv_borderColor, DEFAULT_BORDER_COLOR)
+
+            initials =
+                ta.getString(R.styleable.AvatarImageView_aiv_initials) ?: "??"
+            scaleType = ScaleType.CENTER_CROP
+            setup()
+        }
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        Log.d("TAG", "onAttachToWindow")
+        Log.d(LOG_TAG, "onAttachToWindow")
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        Log.d("TAG", "onMeasure")
+        Log.d(
+            LOG_TAG, """ 
+            onMeasure
+            width: ${MeasureSpec.toString(widthMeasureSpec)}
+            heignt: ${MeasureSpec.toString(heightMeasureSpec)}
+        """.trimIndent()
+        )
+        val initSize = resolveDefaultSize(widthMeasureSpec)
+        setMeasuredDimension(initSize, initSize)
+        Log.d(LOG_TAG, "onMeasure after set size: $measuredWidth $measuredHeight")
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        Log.d(LOG_TAG, "onSizeChanged")
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        Log.d("TAG", "onLayout")
+        Log.d(LOG_TAG, "onLayout")
     }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-        Log.d("TAG", "onDraw")
+        Log.d(LOG_TAG, "onDraw")
+    }
+
+    private fun setup() {
+       // init fields
+    }
+
+    private fun resolveDefaultSize(spec: Int): Int {
+        return when (MeasureSpec.getMode(spec)) {
+            MeasureSpec.UNSPECIFIED -> context.dpToPx(DEFAULT_SIZE).toInt() /// ResolveDefaultSize()
+            MeasureSpec.AT_MOST -> MeasureSpec.getSize(spec) // from spec
+            MeasureSpec.EXACTLY -> MeasureSpec.getSize(spec) // from spec
+            else -> MeasureSpec.getSize(spec)
+        }
+    }
+
+    companion object {
+        private const val DEFAULT_SIZE = 100
+        private const val DEFAULT_BORDER_WIDTH = 2
+        private const val DEFAULT_BORDER_COLOR = Color.WHITE
     }
 }
