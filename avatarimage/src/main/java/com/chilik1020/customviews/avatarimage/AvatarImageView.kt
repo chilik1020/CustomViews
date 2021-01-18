@@ -1,13 +1,14 @@
 package com.chilik1020.customviews.avatarimage
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
+import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.toRectF
 import com.chilik1020.customviews.R
 import com.chilik1020.customviews.extensions.dpToPx
 import com.chilik1020.customviews.utils.LOG_TAG
@@ -24,6 +25,13 @@ class AvatarImageView @JvmOverloads constructor(
     @ColorInt
     private var borderColor: Int = Color.WHITE
     private var initials: String = "??"
+
+    private val maskPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val viewRect = Rect()
+    private lateinit var resultBm: Bitmap
+    private lateinit var maskBm: Bitmap
+    private lateinit var srcBm: Bitmap
 
     init {
         if (attrs != null) {
@@ -65,6 +73,14 @@ class AvatarImageView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         Log.d(LOG_TAG, "onSizeChanged")
+        if (w == 0) return
+        with(viewRect) {
+            left = 0
+            top = 0
+            right = w
+            bottom = h
+        }
+        prepareBitmaps(w, h)
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -72,13 +88,27 @@ class AvatarImageView @JvmOverloads constructor(
         Log.d(LOG_TAG, "onLayout")
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         Log.d(LOG_TAG, "onDraw")
+
+        canvas.drawBitmap(resultBm, viewRect, viewRect, null)
+        val half = (borderWidth / 2).toInt()
+        viewRect.inset(half, half)
+        canvas.drawOval(viewRect.toRectF(), borderPaint)
     }
 
     private fun setup() {
-       // init fields
+        with(maskPaint) {
+            color = Color.RED
+            style = Paint.Style.FILL
+        }
+
+        with(borderPaint) {
+            style = Paint.Style.STROKE
+            strokeWidth = borderWidth
+            color = borderColor
+        }
     }
 
     private fun resolveDefaultSize(spec: Int): Int {
@@ -88,6 +118,19 @@ class AvatarImageView @JvmOverloads constructor(
             MeasureSpec.EXACTLY -> MeasureSpec.getSize(spec) // from spec
             else -> MeasureSpec.getSize(spec)
         }
+    }
+
+    private fun prepareBitmaps(w: Int, h: Int) {
+        maskBm = Bitmap.createBitmap(w,h, Bitmap.Config.ALPHA_8)
+        resultBm = maskBm.copy(Bitmap.Config.ARGB_8888, true)
+        val maskCanvas = Canvas(maskBm)
+        maskCanvas.drawOval(viewRect.toRectF(), maskPaint)
+        maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        srcBm = drawable.toBitmap(w,h,Bitmap.Config.ARGB_8888)
+
+        val resultCanvas = Canvas(resultBm)
+        resultCanvas.drawBitmap(maskBm, viewRect, viewRect, null)
+        resultCanvas.drawBitmap(srcBm, viewRect,viewRect, maskPaint)
     }
 
     companion object {
