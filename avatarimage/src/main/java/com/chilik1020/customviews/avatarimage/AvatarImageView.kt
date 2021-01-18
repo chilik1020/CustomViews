@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
+import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import androidx.appcompat.widget.AppCompatImageView
@@ -46,14 +47,11 @@ class AvatarImageView @JvmOverloads constructor(
 
             initials =
                 ta.getString(R.styleable.AvatarImageView_aiv_initials) ?: "??"
-            scaleType = ScaleType.CENTER_CROP
-            setup()
+            ta.recycle()
         }
-    }
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        Log.d(LOG_TAG, "onAttachToWindow")
+        scaleType = ScaleType.CENTER_CROP
+        setup()
+        setLayerType(View.LAYER_TYPE_SOFTWARE, null)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -83,16 +81,12 @@ class AvatarImageView @JvmOverloads constructor(
         prepareBitmaps(w, h)
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        Log.d(LOG_TAG, "onLayout")
-    }
-
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         Log.d(LOG_TAG, "onDraw")
 
         canvas.drawBitmap(resultBm, viewRect, viewRect, null)
+
         val half = (borderWidth / 2).toInt()
         viewRect.inset(half, half)
         canvas.drawOval(viewRect.toRectF(), borderPaint)
@@ -121,16 +115,17 @@ class AvatarImageView @JvmOverloads constructor(
     }
 
     private fun prepareBitmaps(w: Int, h: Int) {
-        maskBm = Bitmap.createBitmap(w,h, Bitmap.Config.ALPHA_8)
-        resultBm = maskBm.copy(Bitmap.Config.ARGB_8888, true)
+        maskBm = Bitmap.createBitmap(w, h, Bitmap.Config.ALPHA_8)
+        resultBm = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val maskCanvas = Canvas(maskBm)
         maskCanvas.drawOval(viewRect.toRectF(), maskPaint)
-        maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-        srcBm = drawable.toBitmap(w,h,Bitmap.Config.ARGB_8888)
+
+        srcBm = drawable.toBitmap(w, h, Bitmap.Config.ARGB_8888)
 
         val resultCanvas = Canvas(resultBm)
-        resultCanvas.drawBitmap(maskBm, viewRect, viewRect, null)
-        resultCanvas.drawBitmap(srcBm, viewRect,viewRect, maskPaint)
+        resultCanvas.drawBitmap(maskBm.extractAlpha(), viewRect, viewRect, null)
+        maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        resultCanvas.drawBitmap(srcBm, viewRect, viewRect, maskPaint)
     }
 
     companion object {
