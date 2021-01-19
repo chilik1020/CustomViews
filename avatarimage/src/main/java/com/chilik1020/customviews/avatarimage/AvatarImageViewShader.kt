@@ -36,19 +36,19 @@ class AvatarImageViewShader @JvmOverloads constructor(
         if (attrs != null) {
             val ta = context.obtainStyledAttributes(attrs, R.styleable.AvatarImageViewShader)
             borderWidth = ta.getDimension(
-                R.styleable.AvatarImageViewMask_aiv_borderWidth,
+                R.styleable.AvatarImageViewShader_aivs_borderWidth,
                 context.dpToPx(DEFAULT_BORDER_WIDTH)
             )
 
             borderColor =
-                ta.getColor(R.styleable.AvatarImageViewMask_aiv_borderColor, DEFAULT_BORDER_COLOR)
+                ta.getColor(R.styleable.AvatarImageViewShader_aivs_borderColor, DEFAULT_BORDER_COLOR)
 
             initials =
-                ta.getString(R.styleable.AvatarImageViewMask_aiv_initials) ?: "??"
+                ta.getString(R.styleable.AvatarImageViewShader_aivs_initials) ?: "??"
             ta.recycle()
         }
         // setWillNotDraw(false)
-        setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+     //   setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         scaleType = ScaleType.CENTER_CROP
         setup()
 

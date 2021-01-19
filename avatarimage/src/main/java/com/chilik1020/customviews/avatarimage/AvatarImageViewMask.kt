@@ -38,15 +38,15 @@ class AvatarImageViewMask @JvmOverloads constructor(
         if (attrs != null) {
             val ta = context.obtainStyledAttributes(attrs, R.styleable.AvatarImageViewMask)
             borderWidth = ta.getDimension(
-                R.styleable.AvatarImageViewMask_aiv_borderWidth,
+                R.styleable.AvatarImageViewMask_aivm_borderWidth,
                 context.dpToPx(DEFAULT_BORDER_WIDTH)
             )
 
             borderColor =
-                ta.getColor(R.styleable.AvatarImageViewMask_aiv_borderColor, DEFAULT_BORDER_COLOR)
+                ta.getColor(R.styleable.AvatarImageViewMask_aivm_borderColor, DEFAULT_BORDER_COLOR)
 
             initials =
-                ta.getString(R.styleable.AvatarImageViewMask_aiv_initials) ?: "??"
+                ta.getString(R.styleable.AvatarImageViewMask_aivm_initials) ?: "??"
             ta.recycle()
         }
         // setWillNotDraw(false)
