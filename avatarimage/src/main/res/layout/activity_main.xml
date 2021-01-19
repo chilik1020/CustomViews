@@ -7,10 +7,19 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <com.chilik1020.customviews.avatarimage.AvatarImageView
+    <com.chilik1020.customviews.avatarimage.AvatarImageViewMask
         android:id="@+id/aivUserAvatar"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:src="@drawable/avatar_img"/>
+        android:src="@drawable/avatar_img" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="20dp" />
+
+    <com.chilik1020.customviews.avatarimage.AvatarImageViewShader
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/avatar_img" />
 
 </LinearLayout>

@@ -5,20 +5,20 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.toRectF
 import com.chilik1020.customviews.R
 import com.chilik1020.customviews.extensions.dpToPx
 import com.chilik1020.customviews.utils.LOG_TAG
 
-class AvatarImageView @JvmOverloads constructor(
+class AvatarImageViewShader @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : AppCompatImageView(context, attrs, defStyleAttr) {
+) : ImageView(context, attrs, defStyleAttr) {
 
     @Px
     var borderWidth: Float = context.dpToPx(DEFAULT_BORDER_WIDTH)
@@ -27,31 +27,31 @@ class AvatarImageView @JvmOverloads constructor(
     private var borderColor: Int = Color.WHITE
     private var initials: String = "??"
 
-    private val maskPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val avatarPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val viewRect = Rect()
-    private lateinit var resultBm: Bitmap
-    private lateinit var maskBm: Bitmap
-    private lateinit var srcBm: Bitmap
+
 
     init {
         if (attrs != null) {
-            val ta = context.obtainStyledAttributes(attrs, R.styleable.AvatarImageView)
+            val ta = context.obtainStyledAttributes(attrs, R.styleable.AvatarImageViewShader)
             borderWidth = ta.getDimension(
-                R.styleable.AvatarImageView_aiv_borderWidth,
+                R.styleable.AvatarImageViewMask_aiv_borderWidth,
                 context.dpToPx(DEFAULT_BORDER_WIDTH)
             )
 
             borderColor =
-                ta.getColor(R.styleable.AvatarImageView_aiv_borderColor, DEFAULT_BORDER_COLOR)
+                ta.getColor(R.styleable.AvatarImageViewMask_aiv_borderColor, DEFAULT_BORDER_COLOR)
 
             initials =
-                ta.getString(R.styleable.AvatarImageView_aiv_initials) ?: "??"
+                ta.getString(R.styleable.AvatarImageViewMask_aiv_initials) ?: "??"
             ta.recycle()
         }
+        // setWillNotDraw(false)
+        setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         scaleType = ScaleType.CENTER_CROP
         setup()
-        setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -78,14 +78,14 @@ class AvatarImageView @JvmOverloads constructor(
             right = w
             bottom = h
         }
-        prepareBitmaps(w, h)
+        prepareShader(w, h)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         Log.d(LOG_TAG, "onDraw")
 
-        canvas.drawBitmap(resultBm, viewRect, viewRect, null)
+        canvas.drawOval(viewRect.toRectF(), avatarPaint)
 
         val half = (borderWidth / 2).toInt()
         viewRect.inset(half, half)
@@ -93,11 +93,6 @@ class AvatarImageView @JvmOverloads constructor(
     }
 
     private fun setup() {
-        with(maskPaint) {
-            color = Color.RED
-            style = Paint.Style.FILL
-        }
-
         with(borderPaint) {
             style = Paint.Style.STROKE
             strokeWidth = borderWidth
@@ -114,18 +109,9 @@ class AvatarImageView @JvmOverloads constructor(
         }
     }
 
-    private fun prepareBitmaps(w: Int, h: Int) {
-        maskBm = Bitmap.createBitmap(w, h, Bitmap.Config.ALPHA_8)
-        resultBm = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val maskCanvas = Canvas(maskBm)
-        maskCanvas.drawOval(viewRect.toRectF(), maskPaint)
-
-        srcBm = drawable.toBitmap(w, h, Bitmap.Config.ARGB_8888)
-
-        val resultCanvas = Canvas(resultBm)
-        resultCanvas.drawBitmap(maskBm.extractAlpha(), viewRect, viewRect, null)
-        maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-        resultCanvas.drawBitmap(srcBm, viewRect, viewRect, maskPaint)
+    private fun prepareShader(w: Int, h: Int) {
+        val srcBm = drawable.toBitmap(w, h, Bitmap.Config.ARGB_8888)
+        avatarPaint.shader = BitmapShader(srcBm, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
     }
 
     companion object {
